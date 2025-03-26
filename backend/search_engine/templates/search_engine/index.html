@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor de Busca Acadêmica</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        .search-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-form {
+            display: flex;
+            flex-direction: column;
+        }
+        .search-input {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .search-button {
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .search-button:hover {
+            background-color: #2980b9;
+        }
+        .results-container {
+            margin-top: 2rem;
+            display: none;
+        }
+        .result-item {
+            background-color: white;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .result-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        .result-meta {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+        .result-description {
+            color: #555;
+        }
+        .result-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .result-link:hover {
+            text-decoration: underline;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔍 Motor de Busca Acadêmica</h1>
+        <p class="subtitle">Encontre estudos e artigos científicos confiáveis</p>
+    </header>
+
+    <div class="container">
+        <div class="search-container">
+            <form id="search-form" class="search-form">
+                <input type="text" id="search-input" class="search-input" placeholder="Digite o tema que deseja pesquisar..." required minlength="3">
+                <button type="submit" class="search-button">Pesquisar</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Pesquisando fontes acadêmicas. Isso pode levar alguns instantes...</p>
+        </div>
+
+        <div id="results-container" class="results-container">
+            <h2>Resultados da Pesquisa</h2>
+            <div id="results-list"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2024 Motor de Busca Acadêmica | Desenvolvido com Django e OpenAI</p>
+    </footer>
+
+    <script>
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const loadingDiv = document.getElementById('loading');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsList = document.getElementById('results-list');
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length < 3) {
+                alert('Por favor, digite pelo menos 3 caracteres para pesquisar.');
+                return;
+            }
+            
+            // Mostrar loading
+            loadingDiv.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            resultsList.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/pesquisa/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ termo: searchTerm }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao realizar a pesquisa');
+                }
+                
+                const data = await response.json();
+                
+                // Preencher resultados
+                if (data.fontes && data.fontes.length > 0) {
+                    data.fontes.forEach(fonte => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'result-item';
+                        
+                        resultItem.innerHTML = `
+                            <h3 class="result-title">${fonte.titulo}</h3>
+                            <div class="result-meta">
+                                ${fonte.autores ? `<span>Autores: ${fonte.autores}</span><br>` : ''}
+                                ${fonte.instituicao ? `<span>Instituição/Revista: ${fonte.instituicao}</span><br>` : ''}
+                                ${fonte.ano_publicacao ? `<span>Ano: ${fonte.ano_publicacao}</span>` : ''}
+                            </div>
+                            <p class="result-description">${fonte.descricao || 'Sem descrição disponível.'}</p>
+                            ${fonte.link ? `<a href="${fonte.link}" class="result-link" target="_blank">Acessar fonte</a>` : ''}
+                        `;
+                        
+                        resultsList.appendChild(resultItem);
+                    });
+                } else {
+                    resultsList.innerHTML = '<p>Nenhuma fonte acadêmica encontrada para este tema.</p>';
+                }
+                
+                // Exibir resultados
+                resultsContainer.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                resultsList.innerHTML = `<p>Ocorreu um erro durante a pesquisa: ${error.message}</p>`;
+                resultsContainer.style.display = 'block';
+            } finally {
+                // Esconder loading
+                loadingDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
