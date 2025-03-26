@@ -3,9 +3,16 @@ from openai import OpenAI
 import time
 import sys
 import json
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # Configuração da API OpenAI
-api_key = os.getenv("OPENAI_API_KEY", "sua_api_key_aqui")
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("Chave da API OpenAI não encontrada. Verifique o arquivo .env.")
+
 client = OpenAI(api_key=api_key)
 
 def pesquisar_web(termo_pesquisa):

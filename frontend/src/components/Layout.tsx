@@ -86,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <IconButton 
               color="inherit" 
               component="a" 
-              href="https://github.com" 
+              href="https://github.com/IsraelAraujo70/busca_academica_ia" 
               target="_blank"
               sx={{ ml: 1 }}
             >
